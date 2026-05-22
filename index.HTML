@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Karoo Boutik | Luxe & Élégance - Abidjan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fef6fb;
+      overflow-x: hidden;
+      transition: background 0.3s;
+    }
+    body.dark-mode { background: #0f0b12; color: #f0eef2; }
+    /* Curseur personnalisé */
+    .custom-cursor, .custom-cursor-dot {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 50%;
+    }
+    .custom-cursor {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 79, 163, 0.3);
+      backdrop-filter: blur(4px);
+      transition: transform 0.1s;
+    }
+    .custom-cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: #ff4fa3;
+    }
+    /* Loader */
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #1a0b12;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      transition: opacity 0.8s;
+    }
+    .loader-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #ffb6d1;
+      border-top: 4px solid #ff4fa3;
+      border-radius: 50%;
+      animation: spin 1s infinite linear;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    /* Navbar */
+    .glass-nav {
+      background: rgba(255, 248, 251, 0.92);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.02);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ff4fa3, #b24274);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-link {
+      text-decoration: none;
+      font-weight: 500;
+      color: #4a2c38;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+    .nav-link:hover, .nav-link.active-nav { color: #ff4fa3; }
+    .nav-icons { display: flex; gap: 1rem; align-items: center; }
+    .cart-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      position: relative;
+      color: #ff4fa3;
+      cursor: pointer;
+    }
+    #cartCount {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background: #ff4fa3;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; }
+    .mobile-menu {
+      position: absolute;
+      top: 70px;
+      left: 0;
+      width: 100%;
+      background: rgba(255, 240, 245, 0.98);
+      backdrop-filter: blur(20px);
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.5rem;
+      z-index: 999;
+    }
+    /* Boutons */
+    .btn-primary {
+      background: linear-gradient(135deg, #ff4fa3, #c83e7a);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(255,79,163,0.3);
+      cursor: pointer;
+    }
+    .btn-primary:hover { transform: scale(1.02); box-shadow: 0 8px 20px rgba(255,79,163,0.4); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #ff4fa3;
+      padding: 8px 22px;
+      border-radius: 40px;
+      color: #ff4fa3;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-outline:hover { background: #ff4fa3; color: white; }
+    /* Main */
+    .main-container {
+      margin-top: 80px;
+      padding: 0 2rem;
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .page { display: none; animation: fadeIn 0.4s ease; }
+    .active-page { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    /* Hero section avec image de la dame en rose */
+    .hero-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      min-height: 65vh;
+      margin-bottom: 2rem;
+    }
+    .hero-content { flex: 1; }
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #ff4fa3, #c83e7a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-subtitle {
+      margin: 1rem 0 1.5rem;
+      color: #6b5b64;
+      font-size: 1rem;
+      max-width: 500px;
+    }
+    .hero-buttons { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    .hero-stats { display: flex; gap: 2rem; }
+    .hero-stats div { font-weight: 500; font-size: 0.9rem; color: #8a7a83; }
+    .hero-stats span { font-weight: 800; color: #ff4fa3; font-size: 1.2rem; display: block; }
+    /* Image de la dame en rose dans l'accueil */
+    .hero-image {
+      flex: 1;
+      text-align: center;
+    }
+    .hero-image img {
+      width: 100%;
+      max-width: 380px;
+      border-radius: 40px;
+      box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
+      transition: transform 0.3s;
+    }
+    .hero-image img:hover { transform: scale(1.02); }
+    /* Objet 3D (je le garde mais en petit ou en arrière-plan ? Je le laisse dans une autre section) */
+    .three-section {
+      margin: 2rem 0;
+      height: 300px;
+      background: rgba(255,255,245,0.2);
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #threeCanvasContainer {
+      width: 100%;
+      height: 100%;
+    }
+    /* Parallax */
+    .parallax-section {
+      margin: 2rem 0 3rem;
+      background: linear-gradient(120deg, #ffb7d2, #d46b98);
+      border-radius: 30px;
+      padding: 2.5rem;
+      text-align: center;
+      color: white;
+      background-attachment: fixed;
+    }
+    .parallax-section h2 { font-size: 1.6rem; font-weight: 600; }
+    /* Catégories */
+    .categories-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.8rem;
+      margin: 2rem 0 2rem;
+    }
+    .category-chip {
+      background: #f0e4ea;
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #4a2c38;
+    }
+    .category-chip.active-cat, .category-chip:hover { background: #ff4fa3; color: white; }
+    /* Grille produits */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    .product-card {
+      background: white;
+      border-radius: 24px;
+      padding: 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+      transition: all 0.35s cubic-bezier(0.2,0.9,0.4,1.1);
+      cursor: pointer;
+      border: 1px solid #f5e6ec;
+    }
+    .product-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12);
+      border-color: #ffc0d0;
+    }
+    .product-card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 18px;
+    }
+    .product-info { margin-top: 12px; }
+    .product-name { font-weight: 700; font-size: 1rem; }
+    .product-price { color: #ff4fa3; font-weight: 600; margin-top: 5px; font-size: 1.1rem; }
+    .add-to-cart {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 40px;
+      background: #fce4ec;
+      border: none;
+      color: #c83e7a;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .add-to-cart:hover { background: #ff4fa3; color: white; }
+    /* Shop layout */
+    .shop-layout { display: flex; flex-wrap: wrap; gap: 2rem; }
+    .shop-sidebar {
+      flex: 1;
+      min-width: 220px;
+      background: rgba(255,255,245,0.4);
+      backdrop-filter: blur(8px);
+      padding: 1.2rem;
+      border-radius: 28px;
+      height: fit-content;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 60px;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #ffcfdf;
+    }
+    .search-box i { color: #ff4fa3; margin-right: 8px; }
+    .search-box input { border: none; outline: none; width: 100%; background: transparent; }
+    .categories-filter label { display: block; margin: 10px 0; cursor: pointer; }
+    .products-container { flex: 3; }
+    /* Détail produit */
+    .detail-container {
+      background: rgba(255,255,245,0.4);
+      backdrop-filter: blur(12px);
+      border-radius: 40px;
+      padding: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    .detail-image { flex: 1; max-width: 350px; border-radius: 30px; }
+    .detail-info { flex: 2; }
+    /* Contact */
+    .contact-card {
+      max-width: 600px;
+      margin: auto;
+      background: rgba(255,255,245,0.5);
+      backdrop-filter: blur(12px);
+      padding: 2rem;
+      border-radius: 40px;
+    }
+    .contact-card input, .contact-card textarea {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border-radius: 60px;
+      border: 1px solid #ffc0d0;
+      outline: none;
+    }
+    /* À propos améliorée */
+    .about-content {
+      max-width: 1000px;
+      margin: auto;
+      background: rgba(255,255,245,0.3);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      padding: 2.5rem;
+      text-align: center;
+    }
+    .about-content h2 {
+      font-size: 2.2rem;
+      color: #ff4fa3;
+      margin-bottom: 1rem;
+    }
+    .about-content p {
+      line-height: 1.7;
+      color: #5c4b54;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+    }
+    .about-highlights {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .highlight {
+      background: rgba(255,255,245,0.6);
+      padding: 1rem 1.5rem;
+      border-radius: 60px;
+      font-weight: 600;
+      color: #c83e7a;
+    }
+    .about-quote {
+      font-style: italic;
+      font-size: 1.1rem;
+      border-left: 3px solid #ff4fa3;
+      padding-left: 1rem;
+      margin: 1.5rem 0;
+      color: #7a6b72;
+    }
+    .social-links {
+      font-size: 2rem;
+      margin-top: 1.5rem;
+      color: #ff4fa3;
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+    /* Footer admin caché */
+    footer {
+      margin-top: 4rem;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid #ffcfdf;
+      font-size: 0.8rem;
+      color: #7a6b72;
+    }
+    .admin-footer-link { color: #ff4fa3; text-decoration: none; cursor: pointer; font-weight: 500; }
+    /* Admin */
+    .admin-login-card {
+      max-width: 400px;
+      margin: auto;
+      background: rgba(255,255,245,0.5);
+      padding: 2rem;
+      border-radius: 2rem;
+      text-align: center;
+    }
+    .admin-login-card input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 1rem 0;
+      border-radius: 60px;
+      border: 1px solid #ffc0d0;
+    }
+    .admin-dashboard { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+    .admin-sidebar {
+      flex: 1;
+      min-width: 200px;
+      background: rgba(0,0,0,0.05);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .admin-sidebar button {
+      background: transparent;
+      border: none;
+      padding: 12px;
+      text-align: left;
+      border-radius: 28px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .admin-sidebar button:hover, .admin-sidebar button.active-tab { background: #ff4fa3; color: white; }
+    .admin-content {
+      flex: 3;
+      background: rgba(255,255,245,0.3);
+      border-radius: 32px;
+      padding: 1.5rem;
+      min-height: 500px;
+    }
+    /* Panier */
+    .cart-sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 450px;
+      height: 100%;
+      background: #fffafd;
+      box-shadow: -5px 0 30px rgba(0,0,0,0.1);
+      z-index: 2000;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.2,0.9,0.4,1.1);
+      display: flex;
+      flex-direction: column;
+      padding: 1.2rem;
+    }
+    .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffcfdf; padding-bottom: 0.8rem; }
+    .cart-items { flex: 1; overflow-y: auto; margin: 1rem 0; }
+    .cart-item { display: flex; gap: 0.8rem; align-items: center; border-bottom: 1px solid #ffe0e8; padding: 12px 0; }
+    .cart-item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 16px; }
+    .cart-item-details { flex: 1; }
+    .cart-item-name { font-weight: 600; font-size: 0.95rem; }
+    .cart-item-price { font-size: 0.85rem; color: #ff4fa3; }
+    .cart-item-quantity { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .cart-item-quantity button { background: #f0eef2; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+    .cart-footer { border-top: 1px solid #ffcfdf; padding-top: 1rem; }
+    .cart-total { font-size: 1.2rem; font-weight: bold; text-align: right; margin-bottom: 1rem; }
+    .cart-actions { display: flex; gap: 1rem; }
+    .whatsapp-btn { background: #25D366; background: linear-gradient(135deg, #25D366, #128C7E); }
+    .clear-cart-btn { background: #e2d4da; color: #c83e7a; border: none; border-radius: 40px; padding: 10px; font-weight: 600; cursor: pointer; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #ff4fa3;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      z-index: 2000;
+      font-weight: 500;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .mobile-menu-btn { display: block; }
+      .main-container { padding: 0 1rem; }
+      .hero-section { flex-direction: column; text-align: center; }
+      .hero-buttons { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .about-content { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="loader" id="loader"><div class="loader-spinner"></div><p>KAROO BOUTIK</p></div>
+<div class="custom-cursor" id="cursor"></div>
+<div class="custom-cursor-dot" id="cursorDot"></div>
+
+<nav class="glass-nav">
+  <div class="logo">Karoo Boutik</div>
+  <div class="nav-links">
+    <a class="nav-link active-nav" data-page="home">Accueil</a>
+    <a class="nav-link" data-page="shop">Boutique</a>
+    <a class="nav-link" data-page="contact">Contact</a>
+    <a class="nav-link" data-page="about">À propos</a>
+  </div>
+  <div class="nav-icons">
+    <button class="cart-btn" id="cartIcon"><i class="fas fa-shopping-bag"></i><span id="cartCount">0</span></button>
+    <button class="mobile-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu"></div>
+</nav>
+
+<main class="main-container">
+  <!-- ACCUEIL : avec image de la dame en rose -->
+  <div id="homePage" class="page active-page">
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title"><span class="gradient-text">L’élégance Karoo</span><br>au bout des doigts.</h1>
+        <p class="hero-subtitle">Vêtements & accessoires soigneusement sélectionnés pour femmes, enfants et ados. Une boutique premium pensée à Abidjan, inspirée de Paris & Londres.</p>
+        <div class="hero-buttons">
+          <button class="btn-primary" id="heroShopBtn">Acheter maintenant →</button>
+          <button class="btn-outline" id="heroDiscoverBtn">Découvrir</button>
+        </div>
+        <div class="hero-stats">
+          <div><span>14K+</span> Clients</div>
+          <div><span>3,3K</span> Articles</div>
+          <div><span>★4.9</span> Avis</div>
+        </div>
+      </div>
+      <div class="hero-image">
+        <!-- =========================================== -->
+        <!-- ICI, mettez votre image de la dame en rose (remplacez "dame-rose.jpg") -->
+        <img src="img/kb.jpg" alt="Femme élégante en rose - Karoo Boutik">
+        <!-- =========================================== -->
+      </div>
+    </div>
+    <!-- Objet 3D en dessous -->
+    <div class="three-section">
+      <div id="threeCanvasContainer"></div>
+    </div>
+    <div class="parallax-section"><h2>Collection Printemps 2026 — Édition Limitée</h2></div>
+    <div class="categories-bar" id="homeCategoriesBar">
+      <span class="category-chip active-cat" data-cat="all">Tout</span>
+      <span class="category-chip" data-cat="robe">Robes</span>
+      <span class="category-chip" data-cat="sac">Sacs</span>
+      <span class="category-chip" data-cat="chaussure">Chaussures</span>
+      <span class="category-chip" data-cat="top">Tops</span>
+      <span class="category-chip" data-cat="veste">Vestes</span>
+    </div>
+    <div id="featuredProducts" class="products-grid"></div>
+  </div>
+
+  <!-- BOUTIQUE -->
+  <div id="shopPage" class="page">
+    <div class="shop-layout">
+      <aside class="shop-sidebar">
+        <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Rechercher un article..."></div>
+        <h3>Catégories</h3>
+        <div class="categories-filter" id="categoriesFilter">
+          <label><input type="checkbox" value="robe"> Robes</label>
+          <label><input type="checkbox" value="sac"> Sacs</label>
+          <label><input type="checkbox" value="chaussure"> Chaussures</label>
+          <label><input type="checkbox" value="top"> Tops</label>
+          <label><input type="checkbox" value="veste"> Vestes</label>
+          <label><input type="checkbox" value="accessoire"> Accessoires</label>
+          <label><input type="checkbox" value="enfant"> Enfant</label>
+        </div>
+      </aside>
+      <div class="products-container"><div id="productsGrid" class="products-grid"></div></div>
+    </div>
+  </div>
+
+  <!-- DÉTAIL PRODUIT -->
+  <div id="productDetailPage" class="page"><div id="productDetailContainer" class="detail-container"></div></div>
+
+  <!-- CONTACT -->
+  <div id="contactPage" class="page">
+    <div class="contact-card">
+      <h2>🌸 Contactez-nous</h2>
+      <form id="contactForm">
+        <input type="text" placeholder="Votre nom" required>
+        <input type="email" placeholder="Email" required>
+        <textarea rows="4" placeholder="Votre message..."></textarea>
+        <button type="submit" class="btn-primary">Envoyer <i class="fas fa-paper-plane"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <!-- À PROPOS (améliorée) -->
+  <div id="aboutPage" class="page">
+    <div class="about-content">
+      <h2>Notre histoire</h2>
+      <p>Karoo Boutik incarne la féminité moderne, entre audace et douceur. Fondée à Abidjan, notre marque s'inspire des capitales de la mode : Paris, Londres et New York. Chaque pièce est sélectionnée avec amour pour révéler votre beauté unique. Mode durable, inclusive et raffinée.</p>
+      <div class="about-highlights">
+        <span class="highlight">✨ Pièces uniques</span>
+        <span class="highlight">🌍 Livraison internationale</span>
+        <span class="highlight">💖 Éthique & responsable</span>
+      </div>
+      <div class="about-quote">
+        « La mode est un langage qui se passe de mots. Chez Karoo, nous vous offrons le plus beau des alphabets. »
+      </div>
+      <p>Notre mission : vous accompagner dans votre quotidien avec des collections qui allient confort, tendance et authenticité. Rejoignez une communauté de femmes inspirantes et célébrez votre style unique.</p>
+      <div class="social-links">
+        <i class="fab fa-instagram"></i>
+        <i class="fab fa-tiktok"></i>
+        <i class="fab fa-pinterest"></i>
+        <i class="fab fa-whatsapp"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN -->
+  <div id="adminLoginPage" class="page">
+    <div class="admin-login-card">
+      <h2><i class="fas fa-lock"></i> Administration</h2>
+      <input type="password" id="adminPass" placeholder="Mot de passe">
+      <button id="adminLoginBtn" class="btn-primary">Se connecter</button>
+      <p class="demo-hint" style="margin-top:1rem;">(mot de passe : admin123)</p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD ADMIN -->
+  <div id="adminDashboardPage" class="page">
+    <div class="admin-dashboard">
+      <div class="admin-sidebar" id="adminSidebar">
+        <button data-admin-tab="stats" class="active-tab"><i class="fas fa-chart-line"></i> Stats</button>
+        <button data-admin-tab="products"><i class="fas fa-boxes"></i> Produits</button>
+        <button data-admin-tab="orders"><i class="fas fa-truck"></i> Commandes</button>
+        <button id="darkModeToggleAdmin"><i class="fas fa-moon"></i> Mode sombre</button>
+        <button id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+      </div>
+      <div class="admin-content" id="adminContent"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>© 2025 Karoo Boutik - Abidjan, Côte d'Ivoire</p>
+  <p><span class="admin-footer-link" id="footerAdminLink">🔒 Administration</span></p>
+</footer>
+
+<!-- PANIER -->
+<div id="cartSidebar" class="cart-sidebar">
+  <div class="cart-header"><h2><i class="fas fa-shopping-bag"></i> Votre panier</h2><button id="closeCartBtn" style="background:none; border:none; font-size:1.8rem;">&times;</button></div>
+  <div id="cartItemsList" class="cart-items"></div>
+  <div class="cart-footer">
+    <div class="cart-total">Total : <span id="cartTotal">0 FCFA</span></div>
+    <div class="cart-actions">
+      <button id="clearCartBtn" class="clear-cart-btn">Vider le panier</button>
+      <button id="whatsappOrderBtn" class="btn-primary whatsapp-btn"><i class="fab fa-whatsapp"></i> Commander</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Produits (avec les articles des images)
+  let products = [
+    { id: 1, name: "Escarpins Saphir", price: 18500, category: "chaussure", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=500&fit=crop", discount: 0, featured: true },
+    { id: 2, name: "Boucles Soleil", price: 7500, category: "accessoire", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=500&fit=crop", discount: 0, featured: true },
+    { id: 3, name: "Cabas Crème Doré", price: 22000, category: "sac", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=500&fit=crop", discount: 0, featured: true },
+    { id: 4, name: "Robe Florale Élégance", price: 45000, category: "robe", image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&h=500&fit=crop", discount: 10, featured: true },
+    { id: 5, name: "Blouse Mimosa", price: 19000, category: "top", image: "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=400&h=500&fit=crop", discount: 0, featured: true },
+    { id: 6, name: "Veste Tweed Chic", price: 55000, category: "veste", image: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&h=500&fit=crop", discount: 10, featured: true },
+    { id: 7, name: "Sac à main Rose Poudré", price: 35000, category: "sac", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=500&fit=crop", discount: 0, featured: false },
+    { id: 8, name: "Robe Soirée Velours", price: 65000, category: "robe", image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=500&fit=crop", discount: 20, featured: false }
+  ];
+  let cart = [];
+  let isAdminLogged = false;
+  let currentAdminTab = "stats";
+  let ordersList = [];
+  let currentHomeCategory = "all";
+  const WHATSAPP_NUMBER = "2250778157648";
+
+  function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+  function formatPrice(p) { return p.toLocaleString('fr-FR') + ' FCFA'; }
+  function getFinalPrice(p) { return p.price - (p.price * (p.discount||0)/100); }
+  function saveProducts() { localStorage.setItem('karooProducts', JSON.stringify(products)); }
+  function loadProducts() { let s = localStorage.getItem('karooProducts'); if(s) products = JSON.parse(s); }
+
+  function updateCartUI() {
+    let count = cart.reduce((a,b)=>a+b.quantity,0);
+    document.getElementById('cartCount').innerText = count;
+    let container = document.getElementById('cartItemsList');
+    if(container) {
+      container.innerHTML = cart.map(item => `
+        <div class="cart-item">
+          <img class="cart-item-img" src="${item.image}">
+          <div class="cart-item-details">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">${formatPrice(item.price)}</div>
+            <div class="cart-item-quantity">
+              <button class="cart-qty-minus" data-id="${item.id}">-</button>
+              <span>${item.quantity}</span>
+              <button class="cart-qty-plus" data-id="${item.id}">+</button>
+              <button class="cart-item-remove" data-id="${item.id}" style="margin-left:auto;"><i class="fas fa-trash-alt"></i></button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+    let total = cart.reduce((s,i)=>s+i.price*i.quantity,0);
+    document.getElementById('cartTotal').innerText = formatPrice(total);
+    document.querySelectorAll('.cart-qty-minus').forEach(btn=>btn.addEventListener('click',()=>{ let id=parseInt(btn.dataset.id); let ex=cart.find(p=>p.id===id); if(ex && ex.quantity>1) ex.quantity--; else if(ex && ex.quantity===1) cart=cart.filter(c=>c.id!==id); updateCartUI(); localStorage.setItem('karooCart',JSON.stringify(cart)); }));
+    document.querySelectorAll('.cart-qty-plus').forEach(btn=>btn.addEventListener('click',()=>{ let id=parseInt(btn.dataset.id); let ex=cart.find(p=>p.id===id); if(ex) ex.quantity++; updateCartUI(); localStorage.setItem('karooCart',JSON.stringify(cart)); }));
+    document.querySelectorAll('.cart-item-remove').forEach(btn=>btn.addEventListener('click',()=>{ let id=parseInt(btn.dataset.id); cart=cart.filter(c=>c.id!==id); updateCartUI(); localStorage.setItem('karooCart',JSON.stringify(cart)); showToast("Article retiré"); }));
+  }
+  function addToCart(product) { let ex=cart.find(p=>p.id===product.id); if(ex) ex.quantity++; else cart.push({...product, quantity:1}); updateCartUI(); localStorage.setItem('karooCart',JSON.stringify(cart)); showToast(`✓ ${product.name} ajouté`); }
+  function clearCart() { cart=[]; updateCartUI(); localStorage.setItem('karooCart',JSON.stringify(cart)); showToast("Panier vidé"); }
+
+  function renderProducts(containerId, list) {
+    let container = document.getElementById(containerId);
+    if(!container) return;
+    container.innerHTML = list.map(p => {
+      let final = getFinalPrice(p);
+      return `<div class="product-card" data-id="${p.id}">
+        <img src="${p.image}"><div class="product-info"><div class="product-name">${p.name}</div>
+        <div class="product-price">${formatPrice(final)}</div>
+        <button class="add-to-cart" data-id="${p.id}">Ajouter au panier</button></div></div>`;
+    }).join('');
+    document.querySelectorAll(`#${containerId} .add-to-cart`).forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); let prod=products.find(p=>p.id==parseInt(btn.dataset.id)); if(prod) addToCart(prod); }));
+    document.querySelectorAll(`#${containerId} .product-card`).forEach(card=>card.addEventListener('click',(e)=>{ if(e.target.classList.contains('add-to-cart')) return; let id=parseInt(card.dataset.id); showProductDetail(id); }));
+  }
+  function showProductDetail(id){
+    let p=products.find(p=>p.id===id);
+    if(!p) return;
+    document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active-page'));
+    document.getElementById('productDetailPage').classList.add('active-page');
+    document.getElementById('productDetailContainer').innerHTML=`<img src="${p.image}" class="detail-image"><div class="detail-info"><h2>${p.name}</h2><p style="font-size:1.8rem; color:#ff4fa3;">${formatPrice(getFinalPrice(p))}</p><p>Catégorie : ${p.category}</p><button id="detailAddCart" class="btn-primary">Ajouter au panier</button></div>`;
+    document.getElementById('detailAddCart')?.addEventListener('click',()=>addToCart(p));
+  }
+  function filterAndRenderShop(){
+    let search=document.getElementById('searchInput')?.value.toLowerCase()||'';
+    let checked=Array.from(document.querySelectorAll('.categories-filter input:checked')).map(cb=>cb.value);
+    let filtered=products.filter(p=>p.name.toLowerCase().includes(search) && (checked.length===0 || checked.includes(p.category)));
+    renderProducts('productsGrid',filtered);
+  }
+  function renderHomeProducts(){
+    let filtered=currentHomeCategory==="all"?products:products.filter(p=>p.category===currentHomeCategory);
+    renderProducts('featuredProducts',filtered.slice(0,6));
+  }
+
+  function renderAdminDashboard(){
+    if(!isAdminLogged) return;
+    let div=document.getElementById('adminContent');
+    if(currentAdminTab==='stats'){
+      div.innerHTML=`<canvas id="statsChart" width="400" height="200"></canvas><p style="margin-top:1rem;">💰 Chiffre d'affaires : ${formatPrice(ordersList.reduce((s,o)=>s+o.total,0))}</p>`;
+      setTimeout(()=>{ let ctx=document.getElementById('statsChart')?.getContext('2d'); if(ctx) new Chart(ctx,{type:'line',data:{labels:['Jan','Fév','Mar','Avr','Mai'],datasets:[{label:'Ventes (FCFA)',data:[125000,189000,245000,320000,412000],borderColor:'#ff4fa3'}]}}); },100);
+    } else if(currentAdminTab==='products'){
+      let search=document.getElementById('adminSearchInput')?.value||'';
+      let filtered=products.filter(p=>p.name.toLowerCase().includes(search.toLowerCase()));
+      let html=`<h3>Gestion produits</h3><div class="search-box" style="margin-bottom:1rem;"><i class="fas fa-search"></i><input type="text" id="adminSearchInput" placeholder="Rechercher..."></div>
+      <button id="addProductBtn" class="btn-primary" style="margin-bottom:1rem;">+ Ajouter produit (image locale)</button>
+      <div>${filtered.map(p=>`<div style="display:flex; justify-content:space-between; align-items:center; background:#faeef3; padding:10px; margin:5px; border-radius:20px;"><div style="display:flex; gap:10px;"><img src="${p.image}" width="50" height="50" style="border-radius:12px;"><div><strong>${p.name}</strong><br>${formatPrice(p.price)} - ${p.category}</div></div><button class="deleteProd" data-id="${p.id}" style="background:none; border:none; font-size:1.2rem;">❌</button></div>`).join('')}</div>`;
+      div.innerHTML=html;
+      document.getElementById('adminSearchInput')?.addEventListener('input',()=>renderAdminDashboard());
+      document.querySelectorAll('.deleteProd').forEach(btn=>btn.addEventListener('click',()=>{ let id=parseInt(btn.dataset.id); products=products.filter(p=>p.id!==id); saveProducts(); renderAdminDashboard(); filterAndRenderShop(); renderHomeProducts(); showToast("Produit supprimé"); }));
+      document.getElementById('addProductBtn')?.addEventListener('click',()=>{
+        let modal=document.createElement('div'); modal.id='addModal'; modal.style.cssText='position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:10001;';
+        modal.innerHTML=`<div style="background:white; padding:1.5rem; border-radius:28px; max-width:400px; width:90%;"><h3>Ajouter un produit</h3><input type="text" id="newName" placeholder="Nom" style="width:100%; margin:10px 0; padding:8px;"><input type="number" id="newPrice" placeholder="Prix FCFA" style="width:100%; margin:10px 0; padding:8px;"><select id="newCat" style="width:100%; margin:10px 0; padding:8px;"><option value="robe">Robe</option><option value="sac">Sac</option><option value="chaussure">Chaussure</option><option value="top">Top</option><option value="veste">Veste</option><option value="accessoire">Accessoire</option></select><input type="file" id="newImg" accept="image/*" style="margin:10px 0;"><div style="display:flex; gap:1rem;"><button id="confirmAdd" class="btn-primary">Ajouter</button><button id="cancelAdd" class="btn-outline">Annuler</button></div></div>`;
+        document.body.appendChild(modal);
+        document.getElementById('cancelAdd').onclick=()=>modal.remove();
+        document.getElementById('confirmAdd').onclick=()=>{
+          let name=document.getElementById('newName').value, price=parseFloat(document.getElementById('newPrice').value), cat=document.getElementById('newCat').value, file=document.getElementById('newImg').files[0];
+          if(!name||isNaN(price)){showToast("Nom et prix valides");return;}
+          if(!file){showToast("Choisissez une image");return;}
+          let reader=new FileReader();
+          reader.onload=e=>{ let img=e.target.result; products.push({id:Date.now(),name,price,category:cat,image:img,discount:0,featured:false}); saveProducts(); renderAdminDashboard(); filterAndRenderShop(); renderHomeProducts(); showToast("Produit ajouté"); modal.remove(); };
+          reader.readAsDataURL(file);
+        };
+      });
+    } else if(currentAdminTab==='orders'){
+      div.innerHTML=`<h3>Commandes reçues</h3><div>${ordersList.length===0?'Aucune commande':ordersList.map((o,i)=>`<div style="border-bottom:1px solid #ffc0d0; padding:10px;">Commande #${i+1} - ${formatPrice(o.total)} - ${o.date}</div>`).join('')}</div>`;
+    }
+  }
+
+  function init3D(){
+    let c=document.getElementById('threeCanvasContainer'); if(!c) return;
+    const scene=new THREE.Scene(); scene.background=null;
+    const camera=new THREE.PerspectiveCamera(45, c.clientWidth/c.clientHeight, 0.1, 1000);
+    camera.position.set(0,0,5);
+    const renderer=new THREE.WebGLRenderer({alpha:true});
+    renderer.setSize(c.clientWidth,c.clientHeight); c.appendChild(renderer.domElement);
+    const geometry=new THREE.TorusKnotGeometry(1,0.3,100,16);
+    const material=new THREE.MeshStandardMaterial({color:0xff4fa3,roughness:0.3,metalness:0.7,emissive:0x331122});
+    const knot=new THREE.Mesh(geometry,material);
+    scene.add(knot);
+    const light=new THREE.DirectionalLight(0xffffff,1); light.position.set(1,2,1);
+    scene.add(light); scene.add(new THREE.AmbientLight(0x404040));
+    function animate(){ requestAnimationFrame(animate); knot.rotation.x+=0.01; knot.rotation.y+=0.02; renderer.render(scene,camera); }
+    animate();
+    window.addEventListener('resize',()=>{ renderer.setSize(c.clientWidth,c.clientHeight); camera.aspect=c.clientWidth/c.clientHeight; camera.updateProjectionMatrix(); });
+  }
+
+  function loadCart(){ let s=localStorage.getItem('karooCart'); if(s) cart=JSON.parse(s); updateCartUI(); }
+  function initEvents(){
+    document.querySelectorAll('.nav-link').forEach(link=>{
+      link.addEventListener('click',e=>{
+        e.preventDefault();
+        let pageId=link.dataset.page;
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active-page'));
+        document.getElementById(pageId+'Page').classList.add('active-page');
+        if(pageId==='shop') filterAndRenderShop();
+        else if(pageId==='home') renderHomeProducts();
+        window.scrollTo(0,0);
+        document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active-nav'));
+        link.classList.add('active-nav');
+      });
+    });
+    document.getElementById('heroShopBtn')?.addEventListener('click',()=>document.querySelector('[data-page="shop"]').click());
+    document.getElementById('heroDiscoverBtn')?.addEventListener('click',()=>document.querySelector('[data-page="shop"]').click());
+    document.getElementById('cartIcon')?.addEventListener('click',()=>document.getElementById('cartSidebar').style.transform='translateX(0)');
+    document.getElementById('closeCartBtn')?.addEventListener('click',()=>document.getElementById('cartSidebar').style.transform='translateX(100%)');
+    document.getElementById('clearCartBtn')?.addEventListener('click',()=>clearCart());
+    document.getElementById('whatsappOrderBtn')?.addEventListener('click',()=>{
+      if(cart.length===0){showToast("Panier vide");return;}
+      let total=cart.reduce((s,i)=>s+i.price*i.quantity,0);
+      let msg=`🛍 *Commande Karoo Boutik*%0A`+cart.map(i=>`- ${i.name} x${i.quantity} = ${formatPrice(i.price*i.quantity)}`).join('%0A')+`%0A%0A📦 *Total : ${formatPrice(total)}*%0A📍 Livraison Abidjan`;
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`,'_blank');
+      ordersList.push({total,date:new Date().toLocaleString()});
+      localStorage.setItem('karooOrders',JSON.stringify(ordersList));
+      showToast("Commande envoyée !");
+    });
+    document.getElementById('searchInput')?.addEventListener('input',filterAndRenderShop);
+    document.querySelectorAll('.categories-filter input').forEach(cb=>cb.addEventListener('change',filterAndRenderShop));
+    document.querySelectorAll('#homeCategoriesBar .category-chip').forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        document.querySelectorAll('#homeCategoriesBar .category-chip').forEach(c=>c.classList.remove('active-cat'));
+        chip.classList.add('active-cat');
+        currentHomeCategory=chip.dataset.cat;
+        renderHomeProducts();
+      });
+    });
+    document.getElementById('footerAdminLink')?.addEventListener('click',()=>{
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active-page'));
+      document.getElementById('adminLoginPage').classList.add('active-page');
+    });
+    document.getElementById('adminLoginBtn')?.addEventListener('click',()=>{
+      if(document.getElementById('adminPass').value==='admin123'){
+        isAdminLogged=true;
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active-page'));
+        document.getElementById('adminDashboardPage').classList.add('active-page');
+        renderAdminDashboard();
+      } else alert("Mot de passe incorrect");
+    });
+    document.getElementById('adminLogoutBtn')?.addEventListener('click',()=>{ isAdminLogged=false; document.querySelector('[data-page="home"]').click(); });
+    document.getElementById('darkModeToggleAdmin')?.addEventListener('click',()=>document.body.classList.toggle('dark-mode'));
+    document.querySelectorAll('[data-admin-tab]').forEach(btn=>{
+      btn.addEventListener('click',()=>{ currentAdminTab=btn.dataset.adminTab; if(isAdminLogged) { renderAdminDashboard(); document.querySelectorAll('[data-admin-tab]').forEach(b=>b.classList.remove('active-tab')); btn.classList.add('active-tab'); } });
+    });
+    let toggle=document.getElementById('menuToggle'), mobileMenu=document.getElementById('mobileMenu');
+    if(toggle && mobileMenu){
+      toggle.addEventListener('click',()=>{
+        if(mobileMenu.style.display==='flex') mobileMenu.style.display='none';
+        else{ mobileMenu.style.display='flex'; mobileMenu.innerHTML=`<a class="nav-link" data-page="home">Accueil</a><a class="nav-link" data-page="shop">Boutique</a><a class="nav-link" data-page="contact">Contact</a><a class="nav-link" data-page="about">À propos</a>`;
+          mobileMenu.querySelectorAll('.nav-link').forEach(a=>a.addEventListener('click',(e)=>{ e.preventDefault(); document.querySelector(`[data-page="${a.dataset.page}"]`).click(); mobileMenu.style.display='none'; }));
+        }
+      });
+    }
+    document.getElementById('contactForm')?.addEventListener('submit',e=>{ e.preventDefault(); showToast("📩 Message envoyé !"); e.target.reset(); });
+  }
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{ let l=document.getElementById('loader'); l.style.opacity='0'; setTimeout(()=>l.style.display='none',800); },1200);
+    loadProducts(); init3D(); loadCart(); renderHomeProducts(); filterAndRenderShop(); initEvents();
+    let savedOrders=localStorage.getItem('karooOrders'); if(savedOrders) ordersList=JSON.parse(savedOrders);
+    if(window.innerWidth<768) document.querySelectorAll('.parallax-section').forEach(el=>el.style.backgroundAttachment='scroll');
+    gsap.from(".hero-title",{duration:0.8,y:40,opacity:0,ease:"power2.out"});
+    const cursor=document.getElementById('cursor'), dot=document.getElementById('cursorDot');
+    document.addEventListener('mousemove',e=>{ cursor.style.transform=`translate(${e.clientX-16}px,${e.clientY-16}px)`; dot.style.transform=`translate(${e.clientX-3}px,${e.clientY-3}px)`; });
+  });
+</script>
+</body>
+</html>
